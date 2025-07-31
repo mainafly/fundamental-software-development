@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>User List</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="styles/loader.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.14/lib/codemirror.css">
+<!-- Include Material Icons font -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+  .sync-icon {
+      font-size: 48px;
+      color: #2196f3;
+      display: inline-block;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .spin {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background: #f5f8fa;
+      color: #333;
+      padding: 20px;
+      //position: relative;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+        margin-top: 100px;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      background: white;
+      border-radius: 12px;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      transition: transform 0.2s ease;
+    }
+
+    .user-card:hover {
+      transform: scale(1.01);
+    }
+
+    .user-pic {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-right: 15px;
+    }
+
+    .user-info {
+      flex-grow: 1;
+    }
+
+    .user-name {
+      font-weight: 600;
+      font-size: 1.1em;
+    }
+
+    .last-msg {
+      font-size: 0.9em;
+      color: #666;
+    }
+
+    .badge {
+      background: #ff4757;
+      color: white;
+      font-size: 0.8em;
+      padding: 4px 8px;
+      border-radius: 999px;
+      min-width: 24px;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .user-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .badge {
+        align-self: flex-end;
+      }
+    }
+  
+  
+  .user-name {
+    text-transform: capitalize;
+  }
+  </style>
+  
+  
+  
+    <style>
+    .mod-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      //display: flex;
+      display: none;
+      flex-direction: column;
+      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    }
+
+    .mod-header {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+    }
+    .mod-close {
+     // background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      margin-right: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .mod-user-pic {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .mod-user-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 150px;
+    }
+
+    .mod-tabs {
+      display: flex;
+      background: rgba(0, 0, 0, 0.3);
+    }
+    .mod-tab-btn {
+      flex: 1;
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      color: white;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+    }
+    .mod-tab-btn.active {
+      border-bottom: 2px solid #00aced;
+    }
+
+    .mod-tab-content {
+      flex: 1;
+      display: none;
+      overflow: hidden;
+    }
+    .mod-tab-content.active {
+      display: block;
+    }
+
+    .mod-footer {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 12px;
+     // postion: sticky;
+   //   bottom: -20px;
+    }
+
+    .mod-arrow {
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .CodeMirror {
+      height: 100%;
+    }
+
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    @media (max-width: 600px) {
+      .mod-user-name {
+        max-width: 100px;
+        font-size: 14px;
+      }
+      .mod-tab-btn {
+        font-size: 12px;
+      }
+    }
+  
+  #sync {
+    position: absolute;
+    right: 4px;
+    
+  }
+    
+    
+    
+    
+    
+    
+    
+        .menu-container.show {
+        transition: transform 0.2s ease-out;
+        transform: scaleX(100%);
+        
+    }
+
+#menu {
+        position: absolute;
+        right:0;
+        top: 0;
+        background: none; // inherit;
+        color: inherit;
+        border: none;
+        font-size: 40px;
+    font-weight: bold;
+  z-index: 101;
+    }
+  
+  
+  
+  .menu-container {
+    max-height: 100vh;
+        position: absolute;
+        right: 0;
+        z-index: 110;
+        transform: scaleX(0);
+        text-align: left;
+        top: 0:
+    overflow: auto;
+  background-color: inherit; // #1e1e1e;
+  color: #ffffff;
+  padding: 20px;
+  width: 220px;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: auto;
+  }
+
+.menu-container button#close, .mod-close{
+  background: transparent;
+  color: #ffffff;
+  border: none;
+  font-size: 18px;
+  float: right;
+  cursor: pointer;
+}
+
+.menu-container hr {
+
+  margin: 5px 0;
+  border: 0;
+  height: 2px;
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(200, 200, 200, 0.75), rgba(0, 0, 0, 0));
+
+}
+
+.menu-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-container li {
+  overflow: auto;
+  transition: background 0.3s, transform 0.2s;
+  margin: 12px 0;
+  
+}
+
+.menu-container a {
+  color: #80cbc4;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.menu-container a:hover {
+  color: #4db6ac;
+}
+    
+    
+    header {
+    
+    
+        
+     justify-content: space-between;
+    align-items: center;
+    background: #3f51b5;
+    color: #fff;
+    padding: 5px 10px;
+   // border-radius: 10px;
+    margin-bottom: 30px;
+  
+    position: fixed;
+    top:0;
+    z-index: 9900;
+    min-height: 80px;
+    line-height: 24px;
+    left: 0;
+        right: 0;
+        
+      
+  }
+    
+    
+    hr {
+    border: 0;
+    height: 2px;
+    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(200, 200, 200, 0.75), rgba(0, 0, 0, 0));
+}
+    
+    
+    #signout1 {
+    background: none;
+    border: 0.5px solid white;
+    border-radius: 90%;
+    border-bottom: none;
+        border-top: none;
+  }
+    
+    button {
+    padding: 10px 20px;
+    background-color: #4caf50;
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #388e3c;
+  }
+
+  </style>
+    
+    
+      <!--link rel="stylesheet" href="styles/home.css"-->
+</head>
+<body>
+    
+      <header>
+    <hr>
+    <button id="signout1">CoCode</button>
+    <button id="menu">&#9776;</button>
+     <div class="menu-container">
+            <button id="close">X</button> Menu
+            <hr>
+            <ul>
+              <li></li>
+             <!--li id="switch">Switch <span>Account</span></li-->
+              <li id="signout">Logout <span id="username"></span></li>
+              <li><a href="changePsw.html">Change password </a></li>
+            </ul>
+     </div>
+    <!--div id="sess">session/term not initialized</div>
+    <div id="date"></div-->
+    <hr>
+  </header>
+
+  <div class="container" id="user-list">
+    <!-- Users will be inserted here -->
+  </div>
+  
+  
+ <div class="loader">
+  <div class="ripple"></div>
+</div>
+  
+  
+  
+  
+  
+  
+  
+  
+
+<script type="module">
+  /*
+  precondition: session must be already created;
+  */
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
+  import {getFirestore, query, where, getDocs, collection, doc, setDoc, getDoc, runTransaction} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import {getAuth, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
+     // import {getDatabase, set, ref, onValue, child, get } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+      const firebaseConfig = {
+    apiKey: "AIzaSyBzebDzvgcldMRjilheYQNbpTQu7KHpdq8",
+    authDomain: "codechat-ac099.firebaseapp.com",
+    projectId: "codechat-ac099",
+    storageBucket: "codechat-ac099.firebasestorage.app",
+    messagingSenderId: "56113632061",
+    appId: "1:56113632061:web:783ff26002958398b42b54",
+    measurementId: "G-XJ5SQB87QR"
+  };
+
+  
+  
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+      const auth = getAuth(app);
+    const db = getFirestore(app);
+    signout.onclick = e=>{
+      signOut(auth);
+    }
+    onAuthStateChanged(auth, user=>{
+        if (!user)
+        window.location.href= "signin.html";
+    })
+  var timeoutId;
+    let stdsRef = collection(db, "students");
+  let q = query(stdsRef, where("name", "!=", false));
+  let stdsSnapshots = await getDocs(q);
+  const loader =document.querySelector(".loader").style;
+ loader.display = "none";
+
+  let me=auth.currentUser.email;
+  let students = [];
+  // stdsSnapshots.sort();
+  stdsSnapshots.forEach(stdDoc=>{
+    let std = stdDoc.data();
+    console.log(std.picURL);
+    students.push(std);
+  });
+ students.sort((a, b)=>a.name.localeCompare(b.name))
+  
+  console.log(students.length);
+    const users = [
+      {
+        picURL: "https://randomuser.me/api/portraits/women/44.jpg",
+        displayName: "Alice Johnson",
+        newMsgCount: 0,
+        lastMsgTimestap: "2025-07-29 09:15 AM"
+      },
+      {
+        picURL: "https://randomuser.me/api/portraits/men/32.jpg",
+        displayName: "James Okoro",
+        newMsgCount: 2,
+        lastMsgTimestap: "2025-07-28 08:45 PM"
+      },
+      {
+        picURL: "https://randomuser.me/api/portraits/women/21.jpg",
+        displayName: "Zainab Musa",
+        newMsgCount: 1,
+        lastMsgTimestap: "2025-06-28 07:30 AM"
+      }
+    ];
+
+  updateLabels(students);
+  function updateLabels(users){
+    const container = document.getElementById('user-list');
+    container.innerHTML = "";
+    users.forEach(user => {
+      const card = document.createElement('div');
+      
+      card.onclick = e=>{
+        console.log(user.email);
+        let editorCont = document
+        .getElementById("mod-editor");
+        editorCont.style
+        .display="flex";
+        editor.refresh();
+        let uname = editorCont.querySelector(".mod-user-name");
+        uname.innerText = user.name;
+        let pic = editorCont.querySelector(".mod-user-pic");
+        pic.src = user.picURL;
+        let codeElm = document.getElementById("mod-textarea")
+        editor.setValue(user.editorContent ?? "");
+        if (me!=user.email){
+        //  editor.setOption("readOnly", true);
+          editor.setOption("readOnly", "nocursor");
+
+        } else {
+            editor.setOption("readOnly", false);
+
+        }
+          
+          
+          
+      let sync = document.getElementById("sync");
+      sync.onclick = e=>{
+          if (me!=user.email) return;
+        let content = editor.getValue();
+          console.log(content);
+          user.editorContent = content;
+        sync.classList.add("spin");
+          sync.style.color ="white";
+          
+          let myRef = doc(db, "students", user.email);
+          let lastT = getCurrentTimestamp();
+          setDoc(myRef, {
+              editorContent:content,
+              lastMsgTime: lastT
+          }, {merge:true})
+          .then(succ=>{
+              card
+              .querySelector(".last-msg")
+              .innerText = formatLastMessageTime(lastT);
+              sync.classList.remove("spin");
+              sync.style.color ="#2196f3";
+          })
+          .catch(e=>{
+              console.error(e);
+              sync.classList.remove("spin");
+              sync.style.color = "red";
+              
+          })
+          
+      }
+       
+      }
+        
+
+        
+      card.className = 'user-card';
+
+      card.innerHTML = `
+        <img src="${user.picURL}" class="user-pic" alt="User Photo">
+        <div class="user-info">
+          <div class="user-name">${user.name} ${user.email==me? "(You)" : ""}</div>
+          <div class="last-msg">${user.lastMsgTime ? formatLastMessageTime(user.lastMsgTime) : ''}</div>
+        </div>
+        ${user.newMsgCount > 0 ? `<div class="badge">${user.newMsgCount}</div>` : ' '}
+      `;
+      
+
+      container.appendChild(card);
+    });
+  }
+  
+  
+  
+function formatLastMessageTime(timestamp) {
+  // Convert "2025-07-29 02:15 PM" to a Date object
+  const parts = timestamp.match(/^(\d{4})-(\d{2})-(\d{2}) (\d{1,2}):(\d{2}) (\w{2})$/);
+  if (!parts) return timestamp; // fallback if format is unexpected
+
+  const [_, year, month, day, hourStr, minuteStr, ampm] = parts;
+  let hour = parseInt(hourStr, 10);
+  const minute = parseInt(minuteStr, 10);
+
+  // Convert to 24-hour format
+  if (ampm.toUpperCase() === "PM" && hour !== 12) hour += 12;
+  if (ampm.toUpperCase() === "AM" && hour === 12) hour = 0;
+
+  const msgDate = new Date(+year, month - 1, +day, hour, minute);
+  const now = new Date();
+
+  const isSameDay = (d1, d2) =>
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  if (isSameDay(msgDate, now)) {
+    // Return time in 12-hour format with AM/PM
+    return msgDate.toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  } else if (isSameDay(msgDate, yesterday)) {
+    return "Yesterday";
+  } else {
+    return msgDate.toISOString().split('T')[0]; // YYYY-MM-DD
+  }
+}
+  
+  
+  
+  
+  function getCurrentTimestamp() {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0'); // months are 0-based
+  const day = String(now.getDate()).padStart(2, '0');
+
+  let hour = now.getHours();
+  const minute = String(now.getMinutes()).padStart(2, '0');
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+
+  hour = hour % 12;
+  hour = hour ? hour : 12; // 0 becomes 12
+
+  return `${year}-${month}-${day} ${String(hour).padStart(2, '0')}:${minute} ${ampm}`;
+}
+    
+    
+    
+    document.getElementById("close").onclick = _ => document.querySelector(".menu-container").classList.remove("show");
+  menu.onclick = _ => document.querySelector(".menu-container").classList.add("show");
+
+  document.body.onclick = e =>{
+    
+    if (e.target != menu )
+    document.querySelector(".menu-container").classList.remove("show");
+
+  }
+  </script>
+  
+  
+  
+  
+
+
+  <div class="mod-overlay" id="mod-editor">
+  <div class="mod-header">
+    <button class="mod-close" id="closeBtn">×</button>
+    <img class="mod-user-pic" src="https://via.placeholder.com/28" />
+    <div class="mod-user-name" title="User Name Here">User Name Here</div>
+    <div id="sync"><span class="material-icons">sync</span></div>
+  </div>
+
+  <div class="mod-tabs">
+    <div class="mod-tab-btn active" data-tab="editor">Editor</div>
+    <div class="mod-tab-btn" data-tab="output">Output</div>
+  </div>
+
+  <div class="mod-tab-content active" id="mod-editor-tab">
+    <textarea id="mod-textarea"></textarea>
+  </div>
+
+  <div class="mod-tab-content" id="mod-output-tab">
+    <iframe id="mod-output-iframe"></iframe>
+  </div>
+
+  <div class="mod-footer">
+    <div class="mod-arrow">↑</div>
+  </div>
+</div>
+
+<!-- CodeMirror & Dependencies -->
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.14/lib/codemirror.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.14/mode/xml/xml.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.14/mode/javascript/javascript.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.14/mode/css/css.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.14/mode/htmlmixed/htmlmixed.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.14/addon/edit/closetag.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.14/addon/edit/matchtags.js"></script>
+
+<script>
+  const editor = CodeMirror
+    .fromTextArea(document
+    .getElementById('mod-textarea'), {
+      lineNumbers: true,
+      mode: 'htmlmixed',
+      theme: 'default',
+      autoCloseTags: true,
+      //matchTags: { bothTags: true }
+    });
+    
+  window.onload = function () {
+    
+    closeBtn.onclick = e=>{
+      console.log(8)
+      document.
+      getElementById("mod-editor")
+      .style
+      .display="none";
+    }
+
+    // Tabs switching
+    const buttons = document.querySelectorAll('.mod-tab-btn');
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        document.querySelectorAll('.mod-tab-content').forEach(tab => tab.classList.remove('active'));
+
+        if (btn.dataset.tab === 'editor') {
+          document.getElementById('mod-editor-tab').classList.add('active');
+        } else {
+          document.getElementById('mod-output-tab').classList.add('active');
+          document.getElementById('mod-output-iframe').srcdoc = editor.getValue();
+        }
+      });
+    });
+  };
+</script>
+
+</body>
+</html>
