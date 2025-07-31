@@ -82,14 +82,73 @@
     }
 
     .badge {
-      background: #ff4757;
-      color: white;
-      font-size: 0.8em;
-      padding: 4px 8px;
-      border-radius: 999px;
-      min-width: 24px;
+      background: lightgreen; //#ff4757;
+      //color: white;
+     // font-size: 0.8em;
+     // padding: 4px 8px;
+      border-radius: 50%;
+    //  min-width: 24px;
+      //min-height: 24px;
       text-align: center;
+      display: none;
+      
     }
+    .fellow {
+        min-width: 24px;
+       min-height: 24px;
+    }
+    .update-indicator {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  background-color: #00c853;
+  border-radius: 50%;
+  box-shadow: 0 0 4px rgba(0, 200, 83, 0.5);
+  animation: shine-pulse 4s ease-in-out infinite;
+}
+
+.update-indicator::before,
+.update-indicator::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  background-color: rgba(0, 200, 83, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.update-indicator::before {
+  animation: concentric-ring 4s ease-out infinite;
+}
+
+.update-indicator::after {
+  animation: concentric-ring 4s ease-out infinite 2s; /* offset for alternating rings */
+}
+
+@keyframes shine-pulse {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(0, 200, 83, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 10px rgba(0, 200, 83, 0.8);
+  }
+}
+
+@keyframes concentric-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 0;
+  }
+}
 
     @media (max-width: 600px) {
       .user-card {
@@ -100,6 +159,7 @@
 
       .badge {
         align-self: flex-end;
+        
       }
     }
   
@@ -410,7 +470,7 @@
   */
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js";
-  import {getFirestore, query, where, getDocs, collection, doc, setDoc, getDoc, runTransaction} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
+  import {getFirestore, onSnapshot, query, where, getDocs, collection, doc, setDoc, getDoc, runTransaction} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
   import {getAuth, signOut, onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.4.0/firebase-auth.js";
      // import {getDatabase, set, ref, onValue, child, get } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
       const firebaseConfig = {
@@ -481,7 +541,25 @@
     container.innerHTML = "";
     users.forEach(user => {
       const card = document.createElement('div');
-      
+      if (me!=user.email)
+      onSnapshot(doc(db, "students", user.email), (userDoc)=>{
+          
+          console.log("a change detected");
+          let std = userDoc.data();
+          std.viewers ??=[];
+          console.log(std.viewers.map(view=>view.id).includes(me));
+          let viewed = std.viewers.map(view=>view.id).includes(me);
+          
+          if (viewed) {
+              card.querySelector(".badge")
+              .style.display = "none";
+              return;
+          }
+          user.editorContent = std.editorContent;
+          card.querySelector(".badge")
+          .style.display = "block";
+      })
+        
       card.onclick = e=>{
         console.log(user.email);
         let editorCont = document
@@ -489,6 +567,22 @@
         editorCont.style
         .display="flex";
         editor.refresh();
+        card.querySelector(".badge")
+        .style.display = "none";
+         if (user.email != me){
+             user.viewers ??=[];
+             if (!user.viewers.map(view=>view.id).includes(me)){
+                 console.log("Let me view an update");
+                 let myView ={id: me, time: getCurrentTimestamp() };
+                 let viewers = user.viewers;
+                 viewers.push(myView);
+                 setDoc(doc(db, "students", user.email), {viewers:viewers}, {merge: true})
+                 .then(_=>{
+                     console.log("viewers updated!");
+                 })
+
+             }
+         }
         let uname = editorCont.querySelector(".mod-user-name");
         uname.innerText = user.name;
         let pic = editorCont.querySelector(".mod-user-pic");
@@ -512,6 +606,7 @@
         let content = editor.getValue();
           console.log(content);
           user.editorContent = content;
+          user.viewers =[];
         sync.classList.add("spin");
           sync.style.color ="white";
           
@@ -519,7 +614,8 @@
           let lastT = getCurrentTimestamp();
           setDoc(myRef, {
               editorContent:content,
-              lastMsgTime: lastT
+              lastMsgTime: lastT,
+              viewers: []
           }, {merge:true})
           .then(succ=>{
               card
@@ -549,7 +645,7 @@
           <div class="user-name">${user.name} ${user.email==me? "(You)" : ""}</div>
           <div class="last-msg">${user.lastMsgTime ? formatLastMessageTime(user.lastMsgTime) : ''}</div>
         </div>
-        ${user.newMsgCount > 0 ? `<div class="badge">${user.newMsgCount}</div>` : ' '}
+        <div class="badge ${user.email=='yusufmainaishaku@gmail.com'? 'update-indicator' : 'fellow' }"> </div> 
       `;
       
 
