@@ -535,17 +535,22 @@
       }
     ];
 
+  var currentView = null;
   updateLabels(students);
   function updateLabels(users){
     const container = document.getElementById('user-list');
     container.innerHTML = "";
     users.forEach(user => {
       const card = document.createElement('div');
+      
       if (me!=user.email)
       onSnapshot(doc(db, "students", user.email), (userDoc)=>{
           
           console.log("a change detected");
           let std = userDoc.data();
+          if (currentView == std.email)
+          editor.setValue(std.editorContent);
+  
           std.viewers ??=[];
           console.log(std.viewers.map(view=>view.id).includes(me));
           let viewed = std.viewers.map(view=>view.id).includes(me);
@@ -562,6 +567,7 @@
         
       card.onclick = e=>{
         console.log(user.email);
+        currentView = user.email;
         let editorCont = document
         .getElementById("mod-editor");
         editorCont.style
@@ -715,7 +721,10 @@ function formatLastMessageTime(timestamp) {
     
     
     
-    document.getElementById("close").onclick = _ => document.querySelector(".menu-container").classList.remove("show");
+    document.getElementById("close").onclick = _ => {
+      document.querySelector(".menu-container").classList.remove("show");
+      currentView = null;
+  }
   menu.onclick = _ => document.querySelector(".menu-container").classList.add("show");
 
   document.body.onclick = e =>{
