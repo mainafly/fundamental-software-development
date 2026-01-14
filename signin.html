@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sign In | CoCode</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+  <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+    <h2 class="text-2xl font-bold mb-6 text-center text-indigo-600">Sign In to CoCode</h2>
+    
+    <form id="signinForm" class="space-y-4">
+      <div>
+        <label for="email" class="block text-sm font-medium">Email</label>
+        <input type="email" id="email" required class="mt-1 w-full border rounded p-2 focus:outline-none focus:ring focus:border-indigo-500">
+      </div>
+
+      <div>
+        <label for="password" class="block text-sm font-medium">Password</label>
+        <input type="password" id="password" required class="mt-1 w-full border rounded p-2 focus:outline-none focus:ring focus:border-indigo-500">
+      </div>
+
+      <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">
+        Sign In
+      </button>
+      <hr>
+      <a href="registration.html">Don't have an account? Register</a>
+
+      <p id="errorMsg" class="text-red-500 text-sm text-center mt-2 hidden"></p>
+    </form>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script type="module">
+    // Firebase setup
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBzebDzvgcldMRjilheYQNbpTQu7KHpdq8",
+    authDomain: "codechat-ac099.firebaseapp.com",
+    projectId: "codechat-ac099",
+    storageBucket: "codechat-ac099.firebasestorage.app",
+    messagingSenderId: "56113632061",
+    appId: "1:56113632061:web:783ff26002958398b42b54",
+    measurementId: "G-XJ5SQB87QR"
+  };
+
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Sign-in logic
+    const form = document.getElementById('signinForm');
+    const errorMsg = document.getElementById('errorMsg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = form.email.value;
+      const password = form.password.value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        errorMsg.textContent = error.code;
+        errorMsg.classList.remove('hidden');
+      }
+    });
+  
+  onAuthStateChanged(auth, user=>{
+    if (user)
+    window.location.href = "home.html"; // redirect on success
+  })
+  </script>
+
+</body>
+</html>
